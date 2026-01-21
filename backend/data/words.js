@@ -5,7 +5,7 @@ export const WORDS = [
   },
   {
     id: "w2",
-    text: "elephant",
+    text: "school",
   },
   {
     id: "w3",
@@ -17,7 +17,7 @@ export const WORDS = [
   },
   {
     id: "w5",
-    text: "school",
+    text: "elephant",
   },
   {
     id: "w6",
