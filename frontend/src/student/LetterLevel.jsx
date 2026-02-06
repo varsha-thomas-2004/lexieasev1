@@ -114,6 +114,16 @@ export default function LetterLevelGemini() {
       setScore(data.score);
       setStatus(data.message);
       
+              if (data.score >= 90) {
+          speakFeedback("Excellent work! Congratulations.");
+        } else if (data.score >= 75) {
+          speakFeedback("Well done. You are very close.");
+        } else if (data.score >= 55) {
+          speakFeedback("Good effort. Relax and try again.");
+        } else {
+          speakFeedback("Don't worry. Take your time and keep trying.");
+        }
+
       // Show what was heard
       console.log(`Expected: ${letter}, Heard: ${data.transcript}, Score: ${data.score}`);
       
@@ -145,11 +155,25 @@ export default function LetterLevelGemini() {
     setStatus("");
   };
 
+  const speakFeedback = (text) => {
+  if (!("speechSynthesis" in window)) return;
+
+  window.speechSynthesis.cancel(); // stop any previous speech
+
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.rate = 0.9;   // calm pace
+  utterance.pitch = 1.05; // friendly tone
+  utterance.volume = 1;
+
+  window.speechSynthesis.speak(utterance);
+};
+
+
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h2 style={styles.title}>🔤 Letter Pronunciation Practice</h2>
-        <div style={styles.badge}>Powered by Gemini AI ✨</div>
+        <h2 style={styles.title}>🔤 Letter Practice</h2>
+        
         
         <div style={styles.letterDisplay}>
           {letter}
@@ -228,13 +252,7 @@ export default function LetterLevelGemini() {
           </ul>
         </div>
 
-        <div style={styles.apiInfo}>
-          <p style={styles.apiText}>
-            🌟 Using Google Gemini API - Free tier available!
-            <br />
-            <small>More accurate and cost-effective than OpenAI</small>
-          </p>
-        </div>
+       
       </div>
     </div>
   );
@@ -242,13 +260,14 @@ export default function LetterLevelGemini() {
 
 const styles = {
   container: {
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    minHeight: "100vh",
-    backgroundColor: "#f3f4f6",
-    padding: "20px"
-  },
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  minHeight: "100vh",
+  background: "linear-gradient(to bottom, #f8fafc, #ffffff)",
+  padding: "24px"
+},
+
   card: {
     backgroundColor: "white",
     borderRadius: "16px",
@@ -258,28 +277,24 @@ const styles = {
     width: "100%"
   },
   title: {
-    fontSize: "28px",
-    fontWeight: "bold",
-    color: "#1f2937",
-    marginBottom: "10px",
-    textAlign: "center"
-  },
-  badge: {
-    fontSize: "14px",
-    color: "#8b5cf6",
-    textAlign: "center",
-    marginBottom: "20px",
-    fontWeight: "600"
-  },
-  letterDisplay: {
-    fontSize: "140px",
-    fontWeight: "bold",
-    color: "#3b82f6",
-    margin: "30px 0",
-    fontFamily: "Georgia, serif",
-    textAlign: "center",
-    textShadow: "2px 2px 4px rgba(0,0,0,0.1)"
-  },
+  fontSize: "26px",
+  fontWeight: 700,
+  color: "#0f172a",
+  marginBottom: "12px",
+  textAlign: "center",
+  letterSpacing: "-0.5px"
+},
+
+  
+ letterDisplay: {
+  fontSize: "120px",
+  fontWeight: 700,
+  color: "#1e40af",
+  margin: "28px 0",
+  fontFamily: '"Inter", system-ui, sans-serif',
+  textAlign: "center"
+},
+
   instructions: {
     fontSize: "18px",
     color: "#6b7280",
@@ -366,16 +381,5 @@ const styles = {
     paddingLeft: "20px",
     margin: 0
   },
-  apiInfo: {
-    marginTop: "20px",
-    padding: "15px",
-    backgroundColor: "#ede9fe",
-    borderRadius: "8px",
-    textAlign: "center"
-  },
-  apiText: {
-    fontSize: "14px",
-    color: "#6b21a8",
-    margin: 0
-  }
+  
 };
