@@ -9,8 +9,9 @@ export default function WordLevel() {
   const [feedback, setFeedback] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
 
-  const recognitionRef = useRef(null);
-  const spokenRef = useRef("");
+  const mediaRecorderRef = useRef(null);
+  const chunksRef = useRef([]);
+  const streamRef = useRef(null);
   
   /* =========================
      Load next word
@@ -29,86 +30,68 @@ export default function WordLevel() {
   }, []);
 
   /* =========================
-     Setup Web Speech API
+     Recording controls (MediaRecorder -> upload to Gemini)
   ========================== */
-  useEffect(() => {
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
+  const startRecording = async () => {
+    try {
+      setSpoken("");
+      setFeedback(null);
+      setShownAt(Date.now());
 
-    if (!SpeechRecognition) {
-      alert("Speech Recognition not supported in this browser");
-      return;
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+
+      const mediaRecorder = new MediaRecorder(stream);
+      chunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) chunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(chunksRef.current, { type: chunksRef.current[0]?.type || 'audio/webm' });
+
+        // stop tracks
+        try {
+          streamRef.current.getTracks().forEach(t => t.stop());
+        } catch (e) {}
+
+        const currentWordId = wordId;
+        const currentWord = word;
+        const responseTimeMs = Date.now() - shownAt;
+
+        const form = new FormData();
+        form.append('audio', blob, 'speech.webm');
+        form.append('wordId', currentWordId);
+        form.append('expected', currentWord);
+        form.append('responseTimeMs', responseTimeMs);
+
+        const res = await fetch('http://localhost:5001/api/words/attempt-audio', {
+          method: 'POST',
+          credentials: 'include',
+          body: form,
+        });
+
+        const data = await res.json();
+        setFeedback(data);
+        if (data?.transcript) setSpoken(data.transcript);
+
+        setTimeout(() => loadWord(), 1500);
+      };
+
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error('Recording start failed', err);
+      alert('Unable to access microphone');
     }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = "en-US";
-    recognition.interimResults = false;
-    recognition.continuous = false;
-
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      spokenRef.current = transcript;
-      setSpoken(transcript);
-    };
-
-    recognition.onerror = (err) => {
-      console.error("Speech error:", err);
-      setIsRecording(false);
-    };
-
-    recognition.onend = () => {
-      setIsRecording(false);
-    };
-
-    recognitionRef.current = recognition;
-  }, []);
-
-  /* =========================
-     Recording controls
-  ========================== */
-  const startRecording = () => {
-    if (!recognitionRef.current) return;
-
-    setSpoken("");
-    setFeedback(null);
-    setShownAt(Date.now());
-    setIsRecording(true);
-    recognitionRef.current.start();
   };
 
-  const stopRecording = async () => {
-    if (!recognitionRef.current) return;
-
-    recognitionRef.current.stop();
+  const stopRecording = () => {
+    if (!mediaRecorderRef.current) return;
+    mediaRecorderRef.current.stop();
     setIsRecording(false);
-
-    const currentWordId = wordId;
-    const currentWord = word;
-    const currentSpoken = spokenRef.current;
-    const currentShownAt = shownAt;
-
-    if (!currentSpoken) {
-      alert("Speech not captured. Please try again.");
-      return;
-    }
-
-    const responseTimeMs = Date.now() - currentShownAt;
-
-    const res = await apiFetch("/api/words/attempt", {
-      method: "POST",
-      body: JSON.stringify({
-        wordId: currentWordId,
-        expected: currentWord,
-        spoken: currentSpoken,
-        responseTimeMs,
-      }),
-    });
-
-    setFeedback(res);
-
-    setTimeout(() => {
-      loadWord();
-    }, 1500);
   };
 
   /* =========================

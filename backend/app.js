@@ -8,6 +8,7 @@ import relationshipRoutes from "./routes/relationshipRoutes.js";
 import letterRoutes from "./routes/letterRoutes.js";
 import sentenceRoutes from "./routes/sentenceRoutes.js";
 import wordRoutes from "./routes/wordRoutes.js";
+import twoLetterRoutes from "./routes/twoLetterRoutes.js";
 
 const app = express();
 
@@ -32,5 +33,6 @@ app.use("/api/relationships", relationshipRoutes);
 app.use("/api/letters", letterRoutes);
 app.use("/api/sentences", sentenceRoutes);
 app.use("/api/words", wordRoutes);
+app.use("/api/twoletterwords", twoLetterRoutes);
 
 export default app;
