@@ -8,9 +8,20 @@ import { updateBanditState } from "../src/bandit/updateState.js";
 
 dotenv.config();
 
-const ai = new GoogleGenAI({
-  apiKey: process.env.GEMINI_API_KEY,
-});
+let ai = null;
+
+// Lazy initialization of Gemini API
+const initializeAI = () => {
+  if (!ai) {
+    if (!process.env.GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY environment variable is not set");
+    }
+    ai = new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY,
+    });
+  }
+  return ai;
+};
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyz".split("");
 const EPSILON = 0.3;
@@ -83,7 +94,8 @@ export const geminiLetterAttempt = async (req, res) => {
     const audioBuffer = audio.buffer;
     const base64Audio = audioBuffer.toString("base64");
 
-    const response = await ai.models.generateContent({
+    const geminiAI = initializeAI();
+    const response = await geminiAI.models.generateContent({
       model: "gemini-2.5-flash",
       contents: [
         {
@@ -91,7 +103,7 @@ export const geminiLetterAttempt = async (req, res) => {
           parts: [
             {
               inlineData: {
-                mimeType: "audio/wav",
+                mimeType: audio.mimetype || "audio/wav",
                 data: base64Audio,
               },
             },
@@ -188,3 +200,6 @@ export const geminiLetterAttempt = async (req, res) => {
     });
   }
 };
+
+// Export initializer so other controllers can reuse Gemini client
+export { initializeAI };
