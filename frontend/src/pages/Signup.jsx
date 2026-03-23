@@ -163,13 +163,8 @@ export default function Signup() {
           onChange={handleChange}
         >
           <option value="student">Student</option>
-<<<<<<< HEAD
-          <option value="teacher">Therapist</option>
-          <option value="parent">Guardian</option>
-=======
           <option value="therapist">Therapist</option>
           <option value="guardian">Guardian</option>
->>>>>>> varsha
         </select>
 
         {formData.role === "student" && (

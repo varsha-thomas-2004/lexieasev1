@@ -12,14 +12,10 @@ import { getTrainingCorpusForStudent } from "../services/trainingContentService.
 export const getNextWord = async (req, res) => {
   try {
     const studentId = req.user._id;
-<<<<<<< HEAD
     const corpus = await getTrainingCorpusForStudent(studentId);
     const availableWords = corpus.words;
     
     // Get weakest letters
-=======
-
->>>>>>> varsha
     const weakLetterStates = await LetterState.find({ studentId })
       .sort({ avgReward: 1 })
       .limit(3);
@@ -34,7 +30,6 @@ export const getNextWord = async (req, res) => {
       return score;
     };
 
-<<<<<<< HEAD
     const rankedWords = availableWords
       .map(w => ({
         ...w,
@@ -47,15 +42,6 @@ export const getNextWord = async (req, res) => {
       rankedWords.length > 0
         ? rankedWords
         : availableWords.map(w => ({ ...w, score: 1 }));
-=======
-    const rankedWords = WORDS
-      .map(w => ({ ...w, score: scoreWord(w.text, weakLetters) }))
-      .filter(w => w.score > 0);
-
-    const finalWords = rankedWords.length > 0
-      ? rankedWords
-      : WORDS.map(w => ({ ...w, score: 1 }));
->>>>>>> varsha
 
     await Promise.all(
       finalWords.map(word =>
@@ -93,7 +79,6 @@ export const getNextWord = async (req, res) => {
     chosenState.lastShownAt = new Date();
     await chosenState.save();
 
-<<<<<<< HEAD
     // Return word
     const chosenWord = availableWords.find(
       w => w.id === chosenState.wordId
@@ -104,21 +89,14 @@ export const getNextWord = async (req, res) => {
         error: "Selected word not found in training corpus",
       });
     }
-=======
-    const chosenWord = WORDS.find(w => w.id === chosenState.wordId);
->>>>>>> varsha
 
     return res.json({
       success: true,
       wordId: chosenWord.id,
-<<<<<<< HEAD
       word: chosenWord.text,
       sourceSentence: chosenWord.sourceSentence || null,
       sourceDocTitle: chosenWord.sourceDocTitle || null,
       trainingSource: corpus.source,
-=======
-      word:   chosenWord.text,
->>>>>>> varsha
       targetLetters: weakLetters,
     });
   } catch (err) {

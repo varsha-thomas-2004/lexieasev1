@@ -61,16 +61,19 @@ function App() {
         }
       >
         <Route index element={<Toggle />} />
-        <Route path="dashboard" element={<Dashboard />} />
+        {/* <Route path="dashboard" element={<Dashboard />} /> */}
         <Route path="letter-level" element={<LetterLevel />} />
         <Route path="two-letter-level" element={<TwoLetterLevel />} />
         <Route path="word-level" element={<WordLevel />} />
         <Route path="sentence-level" element={<SentenceLevel />} />
+        <Route path="training-docs" element={<TrainingDocsPage role="student" />} />
+        <Route path="change-password" element={<ChangePassword />} />
+
 
         {/* ✅ Report routes — relative paths, inside StudentLayout so navbar shows */}
-        <Route path="report/sentences" element={<SentenceReport />} />
+        {/* <Route path="report/sentences" element={<SentenceReport />} />
         <Route path="report/words" element={<WordReport />} />
-        <Route path="report/letters" element={<LetterReport />} />
+        <Route path="report/letters" element={<LetterReport />} /> */}
       </Route>
 
         {/* -------- Teacher -------- */}

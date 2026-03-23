@@ -43,11 +43,8 @@ export default function WordLevel() {
   const [shownAt, setShownAt] = useState(null);
   const [feedback, setFeedback] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
-<<<<<<< HEAD
   const [paintedLetters, setPaintedLetters] = useState({});
-=======
   const [isProcessing, setIsProcessing] = useState(false);
->>>>>>> varsha
 
   const recognitionRef = useRef(null);
   const spokenRef = useRef("");
@@ -210,23 +207,23 @@ export default function WordLevel() {
   /* =========================
      Audio Feedback
   ========================== */
-  const speakFeedback = (feedback) => {
-    if (!("speechSynthesis" in window)) return;
+  // const speakFeedback = (feedback) => {
+  //   if (!("speechSynthesis" in window)) return;
 
-    // Always pick a random message, not using the same one as visual
-    const text = feedback.wordCorrect
-      ? getSuccessFeedback()
-      : getEncouragementFeedback();
+  //   // Always pick a random message, not using the same one as visual
+  //   const text = feedback.wordCorrect
+  //     ? getSuccessFeedback()
+  //     : getEncouragementFeedback();
 
-    window.speechSynthesis.cancel();
-    const utterance = new SpeechSynthesisUtterance(text);
+  //   window.speechSynthesis.cancel();
+  //   const utterance = new SpeechSynthesisUtterance(text);
     
-    utterance.rate = 1.0;
-    utterance.pitch = 1.1;
-    utterance.volume = 1.0;
+  //   utterance.rate = 1.0;
+  //   utterance.pitch = 1.1;
+  //   utterance.volume = 1.0;
     
-    window.speechSynthesis.speak(utterance);
-  };
+  //   window.speechSynthesis.speak(utterance);
+  // };
 
   /* =========================
      Submit Attempt
@@ -531,7 +528,6 @@ export default function WordLevel() {
      Render
   ========================== */
   if (!word) return <div style={styles.loading}>Loading…</div>;
-<<<<<<< HEAD
   const speakFeedback = (feedback) => {
     if (!("speechSynthesis" in window) || !feedback) return;
     speakText(
@@ -559,11 +555,6 @@ export default function WordLevel() {
           border: `1px solid ${readingStyle?.colors.border || "#e2e8f0"}`,
         }}
       >
-=======
-  return (
-    <div style={styles.container}>
-      <div style={styles.card}>
->>>>>>> varsha
         {/* <video
           ref={videoRef}
           autoPlay
@@ -715,7 +706,6 @@ export default function WordLevel() {
         )}
         {syllables.length > 0 && (
           <button
-<<<<<<< HEAD
             style={{ ...styles.primaryButton, marginBottom: 24, marginRight: 12 }}
             onClick={() => speakWordBreakdown(word, syllables)}
           >
@@ -725,9 +715,6 @@ export default function WordLevel() {
         {syllables.length > 0 && (
           <button
             style={{ ...styles.secondaryAction, marginBottom: 24 }}
-=======
-            style={{ ...styles.primaryButton, marginBottom: 24 }}
->>>>>>> varsha
             onClick={() => speakSyllables(syllables)}
           >
             Hear Syllables Only

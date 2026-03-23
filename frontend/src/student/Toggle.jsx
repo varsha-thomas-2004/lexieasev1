@@ -23,6 +23,12 @@ export default function Toggle() {
         <button onClick={() => navigate("/student/sentence-level")}>
           Sentence Level
         </button>
+        <button onClick={() => navigate("/student/training-docs")}>
+          Docs
+        </button>
+        <button onClick={() => navigate("/student/change-password")}>
+          Change Password
+        </button>
       </div>
     </div>
   );

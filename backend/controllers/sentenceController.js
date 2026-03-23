@@ -2,13 +2,9 @@ import SentenceState from "../models/SentenceState.js";
 import LetterState from "../models/LetterState.js";
 import { selectNextState } from "../src/bandit/selectNext.js";
 import { updateBanditState } from "../src/bandit/updateState.js";
-<<<<<<< HEAD
 import { getTrainingCorpusForStudent } from "../services/trainingContentService.js";
-=======
-import { SENTENCES } from "../data/sentences.js";
 import { initializeAI } from "./Geminiletter.js";
 import SentenceAttempt from "../models/SentenceAttempt.js";
->>>>>>> varsha
 
 
 // ─────────────────────────────────────────────────────────────────
@@ -17,13 +13,9 @@ import SentenceAttempt from "../models/SentenceAttempt.js";
 export const getNextSentence = async (req, res) => {
   try {
     const studentId = req.user._id;
-<<<<<<< HEAD
     const corpus = await getTrainingCorpusForStudent(studentId);
     const availableSentences = corpus.sentences;
     
-=======
-
->>>>>>> varsha
     // Get weakest letters
     const weakLetterStates = await LetterState.find({ studentId })
       .sort({ avgReward: 1 }) // lowest = hardest
@@ -46,16 +38,11 @@ export const getNextSentence = async (req, res) => {
       return score;
     };
 
-<<<<<<< HEAD
     const rankedSentences = availableSentences
       .map(s => ({
         ...s,
         score: scoreSentence(s.text, weakLetters),
       }))
-=======
-    const rankedSentences = SENTENCES
-      .map(s => ({ ...s, score: scoreSentence(s.text, weakLetters) }))
->>>>>>> varsha
       .filter(s => s.score > 0);
 
     // Fallback: if no sentence stresses weak letters
@@ -117,7 +104,6 @@ export const getNextSentence = async (req, res) => {
     chosenState.lastShownAt = new Date();
     await chosenState.save();
 
-<<<<<<< HEAD
     // Return sentence
     const chosenSentence = availableSentences.find(
       s => s.id === chosenState.sentenceId
@@ -128,10 +114,6 @@ export const getNextSentence = async (req, res) => {
         error: "Selected sentence not found in training corpus",
       });
     }
-=======
-    // Return sentence text
-    const chosenSentence = SENTENCES.find(s => s.id === chosenState.sentenceId);
->>>>>>> varsha
 
     return res.json({
       success: true,
@@ -444,7 +426,6 @@ export const logSentenceAttempt = async (req, res) => {
       }
     }
 
-<<<<<<< HEAD
     // Update SentenceState   
     const fluencyScore = Math.min(1, 3000 / responseTimeMs);
     const visualScoreValue = Number(visualScore || 0);
@@ -464,22 +445,6 @@ export const logSentenceAttempt = async (req, res) => {
     visualScore: visualScoreValue,
     visualIsHard
   });
-=======
-    // ── Reward calculation ───────────────────────────────────────
-    const fluencyScore   = Math.min(1, 3000 / responseTimeMs);
-    const visionPenalty  = visualScore * 0.2;
-    const sentenceReward = 0.6 * (sentenceCorrect ? 1 : 0) + 0.4 * fluencyScore;
-    const finalReward    = Math.max(0, sentenceReward - visionPenalty);
-
-    console.log("REWARD DEBUG", {
-      responseTimeMs,
-      fluencyScore,
-      sentenceCorrect,
-      sentenceReward,
-      visualScore,
-      visualIsHard,
-    });
->>>>>>> varsha
 
     // ── Update bandit state ──────────────────────────────────────
     await updateBanditState(sentenceState, sentenceReward);

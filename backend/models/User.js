@@ -25,7 +25,6 @@ const userSchema = new mongoose.Schema(
       enum: ["admin", "teacher", "parent", "student", "therapist", "guardian"],
       default: "student",
     },
-<<<<<<< HEAD
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -37,17 +36,16 @@ const userSchema = new mongoose.Schema(
       enum: ["teacher", "parent", null],
       default: null,
       index: true,
-=======
+    },
     age: {
       type: Number,
       min: 0,
     },
     lastActive: {
       type: Date,
->>>>>>> varsha
     },
-  },
-  { timestamps: true }
+    // timestamps: true 
+}
 );
 
 // // Hash password before save

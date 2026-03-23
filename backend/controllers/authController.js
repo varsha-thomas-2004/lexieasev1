@@ -135,7 +135,6 @@ export const logout = (req, res) => {
   res.json({ message: "Logged out" });
 };
 
-<<<<<<< HEAD
 export const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -164,7 +163,8 @@ export const changePassword = async (req, res) => {
     return res.json({ success: true, message: "Password updated successfully." });
   } catch (err) {
     return res.status(500).json({ message: err.message || "Failed to update password" });
-=======
+  }
+};
 /* ================================
    GET ALL THERAPISTS
 ================================ */
@@ -192,6 +192,5 @@ export const getGuardians = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: err.message });
->>>>>>> varsha
   }
 };

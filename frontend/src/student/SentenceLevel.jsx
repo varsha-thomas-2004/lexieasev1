@@ -189,9 +189,6 @@ function SentenceLevel() {
     const text = feedback.sentenceCorrect
       ? getSuccessFeedback()
       : getMotivatingFeedback();
-<<<<<<< HEAD
-    speakText(text, { rate: 0.8, pitch: 1.05 });
-=======
 
     window.speechSynthesis.cancel();
     const utterance = new SpeechSynthesisUtterance(text);
@@ -201,7 +198,6 @@ function SentenceLevel() {
     utterance.volume = 1.0;
 
     window.speechSynthesis.speak(utterance);
->>>>>>> varsha
   };
 
   /* =========================
