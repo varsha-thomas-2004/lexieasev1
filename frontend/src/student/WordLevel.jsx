@@ -254,13 +254,13 @@ export default function WordLevel() {
           border: `1px solid ${readingStyle?.colors.border || "#e2e8f0"}`,
         }}
       >
-        <video
+        {/* <video
           ref={videoRef}
           autoPlay
           muted
           playsInline
           style={{ display: "none" }}
-        />
+        /> */}
         <h2 style={styles.title}>🗣️ Word Pronunciation</h2>
 
         <div ref={lensAreaRef} style={styles.lensArea}>
@@ -405,7 +405,7 @@ export default function WordLevel() {
         )}
         {syllables.length > 0 && (
           <button
-            style={styles.primaryButton}
+            style={{ ...styles.primaryButton, marginBottom: 24, marginRight: 12 }}
             onClick={() => speakWordBreakdown(word, syllables)}
           >
             Hear Word Breakdown
@@ -413,7 +413,7 @@ export default function WordLevel() {
         )}
         {syllables.length > 0 && (
           <button
-            style={styles.secondaryAction}
+            style={{ ...styles.secondaryAction, marginBottom: 24 }}
             onClick={() => speakSyllables(syllables)}
           >
             Hear Syllables Only
