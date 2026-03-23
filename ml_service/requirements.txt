@@ -1,5 +1,0 @@
-openai-whisper
-phonemizer
-python-Levenshtein
-flask
-torch

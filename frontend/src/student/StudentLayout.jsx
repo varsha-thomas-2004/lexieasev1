@@ -6,6 +6,7 @@ import { getReadingStyle, useReadingPreferences } from "./useReadingPreferences"
 
 const levels = [
   { label: "Letter", path: "/student/letter-level" },
+  { label: "Two Letter Word", path: "/student/two-letter-level" },
   { label: "Word", path: "/student/word-level" },
   { label: "Sentence", path: "/student/sentence-level" },
   { label: "Docs", path: "/student/training-docs" },
@@ -76,7 +77,7 @@ export default function StudentLayout() {
        <div style={styles.left}>
   <div
     style={styles.logo}
-    onClick={() => navigate("/student/dashboard")}
+    onClick={() => navigate("/")}
   >
     LexCura
   </div>

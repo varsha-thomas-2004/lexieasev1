@@ -14,6 +14,9 @@ export default function Toggle() {
         <button onClick={() => navigate("/student/letter-level")}>
           Letter Level
         </button>
+        <button onClick={() => navigate("/student/two-letter-level")}>
+          Two Letter Word Level
+        </button>
         <button onClick={() => navigate("/student/word-level")}>
           Word Level
         </button>

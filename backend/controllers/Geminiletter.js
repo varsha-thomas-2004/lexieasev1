@@ -3,6 +3,7 @@ import dotenv from "dotenv";
 import { GoogleGenAI } from "@google/genai";
 
 import LetterState from "../models/LetterState.js";
+import LetterAttempt from "../models/LetterAttempt.js";
 import { selectNextState } from "../src/bandit/selectNext.js";
 import { updateBanditState } from "../src/bandit/updateState.js";
 
@@ -63,7 +64,7 @@ export const getNextLetter = async (req, res) => {
 export const geminiLetterAttempt = async (req, res) => {
   try {
     const studentId = req.user._id;
-    const { letter } = req.body;
+    const { letter, responseTimeMs } = req.body;
     const audio = req.file;
 
     if (!letter || !audio) {
@@ -180,6 +181,19 @@ export const geminiLetterAttempt = async (req, res) => {
     await updateBanditState(state, reward);
     state.isActive = false;
     await state.save();
+
+    /* =====================
+       Save Attempt Record  ← NEW
+    ====================== */
+
+    await LetterAttempt.create({
+      studentId,
+      letter,
+      transcript: spoken,
+      score,
+      correct: score >= 80,         // matches your reward threshold
+      responseTimeMs: parseInt(responseTimeMs) || 0,
+    });
 
     res.json({
       success: true,

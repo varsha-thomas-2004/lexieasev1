@@ -1,0 +1,296 @@
+ FULL REPORT DATA: {
+  "success": true,
+  "metrics": {
+    "overview": {
+      "totalAttempts": 4,
+      "correctAttempts": 2,
+      "successRate": "50.0",
+      "accuracyPercentage": "66.7",
+      "avgResponseTime": 5552
+    },
+    "trend": {
+      "direction": "declining",
+      "change": "-66.7",
+      "recentAccuracy": "33.3",
+      "previousAvg": 1
+    },
+    "problemAreas": {
+      "letters": [],
+      "sentences": [
+        {
+          "sentenceId": "s1",
+          "sentence": "The boy bought a blue ball",
+          "attempts": 2,
+          "successRate": "0.0",
+          "avgAccuracy": "33.3",
+          "avgTime": 5562
+        },
+        {
+          "sentenceId": "s5",
+          "sentence": "The sun is very bright",
+          "attempts": 1,
+          "successRate": "100.0",
+          "avgAccuracy": "100.0",
+          "avgTime": 6150
+        },
+        {
+          "sentenceId": "s4",
+          "sentence": "I like to read books",
+          "attempts": 1,
+          "successRate": "100.0",
+          "avgAccuracy": "100.0",
+          "avgTime": 4936
+        }
+      ]
+    },
+    "progress": {
+      "daily": [
+        {
+          "date": "2026-02-11",
+          "attempts": 4,
+          "accuracy": "66.7",
+          "successRate": "50.0"
+        }
+      ],
+      "letterStrength": [
+        {
+          "letter": "a",
+          "strength": "-20.0",
+          "attempts": 3
+        },
+        {
+          "letter": "p",
+          "strength": "-20.0",
+          "attempts": 2
+        },
+        {
+          "letter": "i",
+          "strength": "-20.0",
+          "attempts": 1
+        },
+        {
+          "letter": "n",
+          "strength": "-20.0",
+          "attempts": 1
+        },
+        {
+          "letter": "h",
+          "strength": "-20.0",
+          "attempts": 1
+        },
+        {
+          "letter": "o",
+          "strength": "-20.0",
+          "attempts": 1
+        },
+        {
+          "letter": "t",
+          "strength": "-20.0",
+          "attempts": 2
+        },
+        {
+          "letter": "s",
+          "strength": "-20.0",
+          "attempts": 1
+        },
+        {
+          "letter": "m",
+          "strength": "-20.0",
+          "attempts": 1
+        },
+        {
+          "letter": "g",
+          "strength": "-20.0",
+          "attempts": 1
+        }
+      ]
+    },
+    "feedback": {
+      "messages": [
+        "Keep trying! Focus on the problem areas highlighted below.",
+        "Your recent accuracy decreased by 66.7%. Let's focus on problem areas.",
+        "Try to respond a bit faster as you gain confidence."
+      ],
+      "recommendations": [
+        "Take more time with each sentence",
+        "Practice reading sentences aloud before recording"
+      ],
+      "motivationalQuote": "Progress takes time. Keep practicing, you've got this! 💪"
+    },
+    "timeframe": "7"
+  }
+}
+SentenceLevel.jsx:730 🎙️ Setting up speech recognition (ONCE)
+SentenceLevel.jsx:781 ✅ Speech recognition ready
+SentenceLevel.jsx:786 🧹 Recognition cleaned up on unmount
+SentenceLevel.jsx:730 🎙️ Setting up speech recognition (ONCE)
+SentenceLevel.jsx:781 ✅ Speech recognition ready
+SentenceLevel.jsx:634 ✅ Sentence loaded: {success: true, sentenceId: 's3', sentence: 'She drinks cold water', targetLetters: Array(3)}
+SentenceLevel.jsx:634 ✅ Sentence loaded: {success: true, sentenceId: 's1', sentence: 'The boy bought a blue ball', targetLetters: Array(3)}
+SentenceLevel.jsx:806 ▶️ START button clicked
+SentenceLevel.jsx:822 🎙️ Starting recognition...
+SentenceLevel.jsx:746 🎙️ Recognition started
+SentenceLevel.jsx:753 🎤 Heard: "The" (confidence: 1.00)
+2SentenceLevel.jsx:753 🎤 Heard: "The boy" (confidence: 1.00)
+2SentenceLevel.jsx:753 🎤 Heard: "The boy bought" (confidence: 1.00)
+2SentenceLevel.jsx:753 🎤 Heard: "The boy bought a" (confidence: 1.00)
+SentenceLevel.jsx:753 🎤 Heard: "The boy bought a new" (confidence: 1.00)
+5SentenceLevel.jsx:753 🎤 Heard: "The boy bought a new ball" (confidence: 1.00)
+SentenceLevel.jsx:766 🎙️ Recognition ended. hasTranscript: true
+SentenceLevel.jsx:771 ✅ Calling submitAttempt
+SentenceLevel.jsx:676 📤 submitAttempt called
+SentenceLevel.jsx:691 📤 Sending to API: {sentenceId: 's1', expected: 'The boy bought a blue ball', spoken: 'The boy bought a new ball', responseTimeMs: 4929}
+SentenceLevel.jsx:698 ✅ API Response: {success: true, sentenceCorrect: true, sentenceAccuracy: 0.8333333333333334, problemLetters: Array(5), message: 'Good job! Keep going.'}
+SentenceLevel.jsx:714 ⏭️ Loading next sentence...
+SentenceLevel.jsx:634 ✅ Sentence loaded: {success: true, sentenceId: 's6', sentence: 'We are going to school', targetLetters: Array(3)}
+SentenceLevel.jsx:786 🧹 Recognition cleaned up on unmount
+2studentDashboard.jsx:1319 🔍 FULL REPORT DATA: {
+  "success": true,
+  "metrics": {
+    "overview": {
+      "totalAttempts": 5,
+      "correctAttempts": 3,
+      "successRate": "60.0",
+      "accuracyPercentage": "70.0",
+      "avgResponseTime": 5428
+    },
+    "trend": {
+      "direction": "declining",
+      "change": "-50.0",
+      "recentAccuracy": "50.0",
+      "previousAvg": 1
+    },
+    "problemAreas": {
+      "letters": [
+        {
+          "letter": "b",
+          "errorCount": 1,
+          "errorRate": "20.0"
+        },
+        {
+          "letter": "l",
+          "errorCount": 1,
+          "errorRate": "20.0"
+        },
+        {
+          "letter": "u",
+          "errorCount": 1,
+          "errorRate": "20.0"
+        },
+        {
+          "letter": "e",
+          "errorCount": 1,
+          "errorRate": "20.0"
+        },
+        {
+          "letter": "a",
+          "errorCount": 1,
+          "errorRate": "20.0"
+        }
+      ],
+      "sentences": [
+        {
+          "sentenceId": "s1",
+          "sentence": "The boy bought a blue ball",
+          "attempts": 3,
+          "successRate": "33.3",
+          "avgAccuracy": "50.0",
+          "avgTime": 5351
+        },
+        {
+          "sentenceId": "s5",
+          "sentence": "The sun is very bright",
+          "attempts": 1,
+          "successRate": "100.0",
+          "avgAccuracy": "100.0",
+          "avgTime": 6150
+        },
+        {
+          "sentenceId": "s4",
+          "sentence": "I like to read books",
+          "attempts": 1,
+          "successRate": "100.0",
+          "avgAccuracy": "100.0",
+          "avgTime": 4936
+        }
+      ]
+    },
+    "progress": {
+      "daily": [
+        {
+          "date": "2026-02-11",
+          "attempts": 5,
+          "accuracy": "70.0",
+          "successRate": "60.0"
+        }
+      ],
+      "letterStrength": [
+        {
+          "letter": "i",
+          "strength": "-20.0",
+          "attempts": 1
+        },
+        {
+          "letter": "e",
+          "strength": "-20.0",
+          "attempts": 1
+        },
+        {
+          "letter": "m",
+          "strength": "-20.0",
+          "attempts": 1
+        },
+        {
+          "letter": "h",
+          "strength": "-20.0",
+          "attempts": 1
+        },
+        {
+          "letter": "a",
+          "strength": "-20.0",
+          "attempts": 4
+        },
+        {
+          "letter": "l",
+          "strength": "-20.0",
+          "attempts": 1
+        },
+        {
+          "letter": "o",
+          "strength": "-20.0",
+          "attempts": 1
+        },
+        {
+          "letter": "n",
+          "strength": "-20.0",
+          "attempts": 1
+        },
+        {
+          "letter": "b",
+          "strength": "-20.0",
+          "attempts": 1
+        },
+        {
+          "letter": "g",
+          "strength": "-20.0",
+          "attempts": 1
+        }
+      ]
+    },
+    "feedback": {
+      "messages": [
+        "Good progress! Keep practicing to improve accuracy.",
+        "Your recent accuracy decreased by 50%. Let's focus on problem areas.",
+        "Try to respond a bit faster as you gain confidence."
+      ],
+      "recommendations": [
+        "Take more time with each sentence",
+        "Practice reading sentences aloud before recording",
+        "Focus extra practice on these sounds: b, l, u"
+      ],
+      "motivationalQuote": "Progress takes time. Keep practicing, you've got this! 💪"
+    },
+    "timeframe": "7"
+  }
+}
+

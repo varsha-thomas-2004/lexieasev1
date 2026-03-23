@@ -44,7 +44,9 @@ function SentenceLevel() {
   const [selectedPronunciation, setSelectedPronunciation] = useState("");
   const [paintedWords, setPaintedWords] = useState({});
 
-  const recognitionRef = useRef(null);
+  const mediaRecorderRef = useRef(null);
+  const chunksRef = useRef([]);
+  const streamRef = useRef(null);
   const spokenRef = useRef("");
   const shouldSubmitRef = useRef(false);
 
@@ -187,7 +189,19 @@ function SentenceLevel() {
     const text = feedback.sentenceCorrect
       ? getSuccessFeedback()
       : getMotivatingFeedback();
+<<<<<<< HEAD
     speakText(text, { rate: 0.8, pitch: 1.05 });
+=======
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+
+    utterance.rate = 1.0;
+    utterance.pitch = 1.1;
+    utterance.volume = 1.0;
+
+    window.speechSynthesis.speak(utterance);
+>>>>>>> varsha
   };
 
   /* =========================
@@ -214,7 +228,6 @@ function SentenceLevel() {
     let visionResult = { usable: false, score: 0, isHard: false };
 
     if (responseTimeMs >= 2000) {
-      // sentences need longer threshold
       visionResult = computeVisualHesitationScore(metrics);
     }
 
@@ -245,7 +258,6 @@ function SentenceLevel() {
 
       console.log("✅ API Response:", res);
 
-      // Add varied feedback message
       const feedbackMessage = res.sentenceCorrect
         ? getSuccessFeedback()
         : getMotivatingFeedback();
@@ -257,7 +269,6 @@ function SentenceLevel() {
 
       speakFeedback(res);
 
-      // 🔥 Load next sentence after delay
       setTimeout(() => {
         console.log("⏭️ Loading next sentence...");
         loadSentence();
@@ -272,73 +283,15 @@ function SentenceLevel() {
   };
 
   /* =========================
-     Speech Recognition Setup
+     Recording (MediaRecorder) — send audio to backend → Gemini
   ========================== */
   useEffect(() => {
-    console.log("🎙️ Setting up speech recognition (ONCE)");
-
-    const SpeechRecognition =
-      window.SpeechRecognition || window.webkitSpeechRecognition;
-
-    if (!SpeechRecognition) {
-      alert("Speech Recognition not supported in this browser");
-      return;
-    }
-
-    const recognition = new SpeechRecognition();
-    recognition.lang = "en-US";
-    recognition.interimResults = false;
-    recognition.continuous = false;
-
-    recognition.onstart = () => {
-      console.log("🎙️ Recognition started");
-    };
-
-    recognition.onresult = (event) => {
-      const transcript = event.results[0][0].transcript;
-      const confidence = event.results[0][0].confidence;
-
-      console.log(
-        `🎤 Heard: "${transcript}" (confidence: ${confidence.toFixed(2)})`,
-      );
-
-      spokenRef.current = transcript;
-      setSpoken(transcript);
-    };
-
-    recognition.onerror = (event) => {
-      console.error("❌ Recognition error:", event.error);
-      setIsRecording(false);
-      shouldSubmitRef.current = false;
-    };
-
-    recognition.onend = () => {
-      console.log(
-        `🎙️ Recognition ended. hasTranscript: ${!!spokenRef.current}`,
-      );
-      setIsRecording(false);
-
-      // ✅ AUTO-SUBMIT if we have a transcript
-      if (spokenRef.current) {
-        console.log("✅ Calling submitAttempt");
-        submitAttempt();
-      } else {
-        console.log("⚠️ Not submitting - no transcript");
-      }
-
-      shouldSubmitRef.current = false;
-    };
-
-    recognitionRef.current = recognition;
-    console.log("✅ Speech recognition ready");
-
     return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort();
-        console.log("🧹 Recognition cleaned up on unmount");
-      }
+      try {
+        streamRef.current?.getTracks()?.forEach((t) => t.stop());
+      } catch (e) {}
     };
-  }, []); // Empty array - only setup once
+  }, []);
 
   /* =========================
      Cleanup speech synthesis
@@ -354,47 +307,87 @@ function SentenceLevel() {
   /* =========================
      Controls
   ========================== */
-  const startRecording = () => {
-    console.log("▶️ START button clicked");
-
-    if (!recognitionRef.current) {
-      console.log("❌ No recognition object");
-      return;
-    }
-
-    setSpoken("");
-    spokenRef.current = "";
-    setFeedback(null);
-    setShownAt(Date.now());
-    shouldSubmitRef.current = false;
-
+  const startRecording = async () => {
     try {
+      setSpoken("");
+      spokenRef.current = "";
+      setFeedback(null);
+      setShownAt(Date.now());
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      streamRef.current = stream;
+
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "audio/ogg";
+      const mediaRecorder = new MediaRecorder(stream, { mimeType });
+      chunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) chunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        const blob = new Blob(chunksRef.current, { type: chunksRef.current[0]?.type || mimeType });
+
+        try {
+          streamRef.current.getTracks().forEach((t) => t.stop());
+        } catch (e) {}
+
+        const responseTimeMs = Date.now() - shownAtRef.current;
+        endSegment();
+        const metrics = getSegmentMetrics();
+
+        let visionResult = { usable: false, score: 0, isHard: false };
+        if (responseTimeMs >= 2000) {
+          visionResult = computeVisualHesitationScore(metrics);
+        }
+
+        const form = new FormData();
+        form.append("audio", blob, "speech.webm");
+        form.append("sentenceId", sentenceIdRef.current);
+        form.append("expected", sentenceRef.current);
+        form.append("responseTimeMs", responseTimeMs);
+        form.append("visionUsable", visionResult.usable);
+        form.append("visualScore", visionResult.score);
+        form.append("visionHard", visionResult.isHard);
+
+        setIsRecording(false);
+
+        try {
+          const res = await fetch("http://localhost:5001/api/sentences/attempt", {
+            method: "POST",
+            credentials: "include",
+            body: form,
+          });
+
+          const data = await res.json();
+          setFeedback(data);
+          if (data?.transcript) {
+            spokenRef.current = data.transcript;
+            setSpoken(data.transcript);
+          }
+
+          speakFeedback(data); // ✅ Added: speak feedback after audio attempt
+
+          setTimeout(() => loadSentence(), 1500);
+        } catch (err) {
+          console.error("Sentence upload failed", err);
+          setFeedback({ sentenceCorrect: false, displayMessage: "Upload failed" });
+        }
+      };
+
+      mediaRecorderRef.current = mediaRecorder;
+      mediaRecorder.start();
       setIsRecording(true);
-      recognitionRef.current.start();
-      console.log("🎙️ Starting recognition...");
-    } catch (error) {
-      console.error("❌ Start error:", error);
-      setIsRecording(false);
+    } catch (err) {
+      console.error("Recording start failed", err);
+      alert("Unable to access microphone");
     }
   };
 
   const stopRecording = () => {
-    console.log("⏹️ STOP button clicked");
-
-    if (!recognitionRef.current) {
-      console.log("❌ No recognition object");
-      return;
-    }
-
-    shouldSubmitRef.current = true;
-    console.log("✅ Set shouldSubmit = true");
-
-    try {
-      recognitionRef.current.stop();
-      console.log("🎙️ Stopping recognition...");
-    } catch (error) {
-      console.error("❌ Stop error:", error);
-    }
+    if (!mediaRecorderRef.current) return;
+    mediaRecorderRef.current.stop();
+    setIsRecording(false);
   };
 
   /* =========================
@@ -808,7 +801,7 @@ const styles = {
     borderRadius: 14,
     border: "1px solid #c7d2fe",
     background: "white",
-    cursor: "pointer",
+        cursor: "pointer",
     fontSize: 16,
     fontWeight: 600,
     transition: "all 0.2s ease",

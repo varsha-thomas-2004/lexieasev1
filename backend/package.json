@@ -24,7 +24,11 @@
     "mammoth": "^1.9.1",
     "mongoose": "^9.1.5",
     "multer": "^2.0.2",
+<<<<<<< HEAD
     "pdf-parse": "^1.1.1"
+=======
+    "openai": "^6.21.0"
+>>>>>>> varsha
   },
   "devDependencies": {
     "nodemon": "^3.1.11"

@@ -1,4 +1,6 @@
 import User from "../models/User.js";
+import StudentTherapist from "../models/StudentTherapist.js";
+import StudentGuardian from "../models/StudentGuardian.js";
 import jwt from "jsonwebtoken";
 
 const generateToken = (user) => {
@@ -27,19 +29,73 @@ const sendTokenResponse = (user, res) => {
 
 export const register = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, therapistId, guardianName, age } = req.body;
 
     const userExists = await User.findOne({ email });
     if (userExists) {
       return res.status(400).json({ message: "User already exists" });
     }
 
-    const user = await User.create({
+    const userData = {
       name,
       email,
       password,
       role,
-    });
+    };
+    if (age != null) userData.age = age;
+
+    const user = await User.create(userData);
+
+    // If registering as a student, potentially create therapist/guardian links
+    if (role === "student") {
+      // therapist assignment
+      try {
+        if (therapistId) {
+          await StudentTherapist.create({
+            studentId: user._id,
+            therapistId,
+          });
+        } else {
+          const therapists = await User.find({ role: "therapist" }).select("_id");
+          if (therapists.length === 1) {
+            await StudentTherapist.create({
+              studentId: user._id,
+              therapistId: therapists[0]._id,
+            });
+          }
+        }
+      } catch (err) {
+        console.error("Error assigning therapist:", err);
+      }
+
+      // guardian assignment via guardianName (no default guardian)
+      if (guardianName) {
+        try {
+          const guardian = await User.findOne({
+            role: "guardian",
+            name: { $regex: `^${guardianName.trim()}$`, $options: "i" },
+          });
+
+          if (!guardian) {
+            await User.findByIdAndDelete(user._id);
+            return res.status(400).json({ message: "Guardian not found. Enter a valid guardian name." });
+          }
+
+          const existingLink = await StudentGuardian.findOne({ guardianId: guardian._id });
+          if (existingLink) {
+            await User.findByIdAndDelete(user._id);
+            return res.status(400).json({ message: "This guardian is already linked to another student." });
+          }
+
+          await StudentGuardian.create({
+            studentId: user._id,
+            guardianId: guardian._id,
+          });
+        } catch (err) {
+          console.error("Error assigning guardian:", err);
+        }
+      }
+    }
 
     sendTokenResponse(user, res);
   } catch (err) {
@@ -54,6 +110,14 @@ export const login = async (req, res) => {
     const user = await User.findOne({ email }).select("+password");
     if (!user || !(await user.matchPassword(password))) {
       return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    // update lastActive timestamp
+    try {
+      user.lastActive = new Date();
+      await user.save();
+    } catch (err) {
+      console.error("Failed to update lastActive:", err);
     }
 
     sendTokenResponse(user, res);
@@ -71,6 +135,7 @@ export const logout = (req, res) => {
   res.json({ message: "Logged out" });
 };
 
+<<<<<<< HEAD
 export const changePassword = async (req, res) => {
   try {
     const { currentPassword, newPassword } = req.body;
@@ -99,5 +164,34 @@ export const changePassword = async (req, res) => {
     return res.json({ success: true, message: "Password updated successfully." });
   } catch (err) {
     return res.status(500).json({ message: err.message || "Failed to update password" });
+=======
+/* ================================
+   GET ALL THERAPISTS
+================================ */
+export const getTherapists = async (req, res) => {
+  try {
+    const therapists = await User.find({ role: "therapist" }).select("_id name email");
+    
+    return res.json({
+      success: true,
+      therapists
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+};
+
+// GET ALL GUARDIANS (for student signup dropdown)
+export const getGuardians = async (req, res) => {
+  try {
+    const guardians = await User.find({ role: "guardian" }).select("_id name email");
+    
+    return res.json({
+      success: true,
+      guardians
+    });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+>>>>>>> varsha
   }
 };

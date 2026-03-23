@@ -22,9 +22,10 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["admin", "teacher", "parent", "student"],
+      enum: ["admin", "teacher", "parent", "student", "therapist", "guardian"],
       default: "student",
     },
+<<<<<<< HEAD
     createdBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
@@ -36,6 +37,14 @@ const userSchema = new mongoose.Schema(
       enum: ["teacher", "parent", null],
       default: null,
       index: true,
+=======
+    age: {
+      type: Number,
+      min: 0,
+    },
+    lastActive: {
+      type: Date,
+>>>>>>> varsha
     },
   },
   { timestamps: true }
@@ -48,8 +57,8 @@ const userSchema = new mongoose.Schema(
 //   next();
 // });
 
-userSchema.pre("save", async function () {
-  if (!this.isModified("password")) return;
+userSchema.pre("save", async function (next) {
+  if (!this.isModified("password")) return ;
   this.password = await bcrypt.hash(this.password, 10);
 });
 

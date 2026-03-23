@@ -8,25 +8,31 @@ import ManageStudentsPage from "./pages/ManageStudentsPage";
 
 import StudentLayout from "./student/StudentLayout";
 import Toggle from "./student/Toggle";
-import Dashboard from "./student/Dashboard";
+import Dashboard from "./student/studentDashboard.jsx";
 
 import LetterLevel from "./student/LetterLevel";
 import TwoLetterLevel from "./student/TwoLetterLevel";
 import WordLevel from "./student/WordLevel";
 import SentenceLevel from "./student/SentenceLevel.jsx";
+import SentenceReport from "./student/Sentencereport.jsx";
+import WordReport from "./student/Wordreport.jsx";
+import LetterReport from "./student/Letterreport";
+
+import TherapistLayout from "./therapist/TherapistLayout";
+import TherapistDashboard from "./therapist/TherapistDashboard";
+import TherapistStudentDetail from "./therapist/TherapistStudentDetail";
+
+import GuardianLayout from "./guardian/GuardianLayout";
+import GuardianDashboard from "./guardian/GuardianDashboard";
+import GuardianStudentDetail from "./guardian/GuardianStudentDetail";
 import ChangePassword from "./student/ChangePassword";
 
 /* ================= Protected Route ================= */
 function ProtectedRoute({ children, allowedRoles }) {
   const user = JSON.parse(localStorage.getItem("user") || "null");
 
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (allowedRoles && !allowedRoles.includes(user.role)) {
-    return <Navigate to="/" replace />;
-  }
+  if (!user) return <Navigate to="/login" replace />;
+  if (allowedRoles && !allowedRoles.includes(user.role)) return <Navigate to="/" replace />;
 
   return children;
 }
@@ -45,28 +51,27 @@ function App() {
           <Route path="/signup" element={<Signup />} />
         </Route>
 
-        {/* -------- Student Routes -------- */}
-        <Route
-          path="/student"
-          element={
-            <ProtectedRoute allowedRoles={["student"]}>
-              <StudentLayout />
-            </ProtectedRoute>
-          }
-        >
-          {/* student home */}
-          <Route index element={<Toggle />} />
+      {/* -------- Student Routes -------- */}
+      <Route
+        path="/student"
+        element={
+          <ProtectedRoute allowedRoles={["student"]}>
+            <StudentLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<Toggle />} />
+        <Route path="dashboard" element={<Dashboard />} />
+        <Route path="letter-level" element={<LetterLevel />} />
+        <Route path="two-letter-level" element={<TwoLetterLevel />} />
+        <Route path="word-level" element={<WordLevel />} />
+        <Route path="sentence-level" element={<SentenceLevel />} />
 
-          {/* dashboard */}
-          <Route path="dashboard" element={<Dashboard />} />
-
-          {/* learning levels (same logic as upstream, just routed) */}
-          <Route path="letter-level" element={<LetterLevel />} />
-          <Route path="word-level" element={<WordLevel />} />
-          <Route path="sentence-level" element={<SentenceLevel />} />
-          <Route path="training-docs" element={<TrainingDocsPage role="student" />} />
-          <Route path="change-password" element={<ChangePassword />} />
-        </Route>
+        {/* ✅ Report routes — relative paths, inside StudentLayout so navbar shows */}
+        <Route path="report/sentences" element={<SentenceReport />} />
+        <Route path="report/words" element={<WordReport />} />
+        <Route path="report/letters" element={<LetterReport />} />
+      </Route>
 
         {/* -------- Teacher -------- */}
         <Route
@@ -101,6 +106,34 @@ function App() {
             </ProtectedRoute>
           }
         />
+
+      {/* -------- Therapist -------- */}
+      <Route
+        path="/therapist"
+        element={
+          <ProtectedRoute allowedRoles={["therapist"]}>
+            <TherapistLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<TherapistDashboard />} />
+        <Route path="dashboard" element={<TherapistDashboard />} />
+        <Route path="student/:studentId" element={<TherapistStudentDetail />} />
+      </Route>
+
+      {/* -------- Guardian -------- */}
+      <Route
+        path="/guardian"
+        element={
+          <ProtectedRoute allowedRoles={["guardian"]}>
+            <GuardianLayout />
+          </ProtectedRoute>
+        }
+      >
+        <Route index element={<GuardianDashboard />} />
+        <Route path="dashboard" element={<GuardianDashboard />} />
+        <Route path="student/:studentId" element={<GuardianStudentDetail />} />
+      </Route>
 
         {/* -------- Parent -------- */}
         <Route
@@ -185,9 +218,27 @@ const placeholderStyle = {
   flexDirection: "column",
   justifyContent: "center",
   alignItems: "center",
-  fontFamily:
+  fontFamily: 
     '-apple-system, BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif',
 };
+
+// const shortcutStyles = {
+//   button: {
+//     position: "fixed",
+//     right: 20,
+//     bottom: 20,
+//     zIndex: 9999,
+//     border: "none",
+//     borderRadius: 999,
+//     background: "#0f172a",
+//     color: "white",
+//     fontWeight: 700,
+//     fontSize: 14,
+//     padding: "12px 16px",
+//     cursor: "pointer",
+//     boxShadow: "0 8px 20px rgba(2, 6, 23, 0.28)",
+//   },
+// };
 
 const shortcutStyles = {
   button: {

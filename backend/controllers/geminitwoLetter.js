@@ -4,33 +4,29 @@ import { selectNextState } from "../src/bandit/selectNext.js";
 import { updateBanditState } from "../src/bandit/updateState.js";
 import { TWO_LETTER_WORDS } from "../data/twoLetterWords.js";
 import { initializeAI } from "./Geminiletter.js";
+import TwoLetterWordAttempt from "../models/Twoletterattempt.js"; // ✅ add this import
 
 // Chooses the next two-letter word based on the student's weakest letters (2–3)
 export const getNextTwoLetterWord = async (req, res) => {
   try {
     const studentId = req.user._id;
 
-    // Get weakest letters
     const weakLetterStates = await LetterState.find({ studentId })
-      .sort({ avgReward: 1 }) // lowest = hardest
+      .sort({ avgReward: 1 })
       .limit(3);
 
     let weakLetters = weakLetterStates.map(ls => ls.letter);
 
-    // Fallback for new users
     if (weakLetters.length === 0) {
       weakLetters = ["a", "e", "i"];
     }
 
-    // Score two-letter words
     const scoreTwoLetterWord = (wordText, letters) => {
       const text = wordText.toLowerCase();
       let score = 0;
-
       for (const letter of letters) {
         score += text.split(letter).length - 1;
       }
-
       return score;
     };
 
@@ -41,13 +37,11 @@ export const getNextTwoLetterWord = async (req, res) => {
       }))
       .filter(w => w.score > 0);
 
-    // Fallback: if no word stresses weak letters
     const finalWords =
       rankedTwoLetterWords.length > 0
         ? rankedTwoLetterWords
         : TWO_LETTER_WORDS.map(w => ({ ...w, score: 1 }));
 
-    // Ensure TwoLetterWordState exists
     await Promise.all(
       finalWords.map(word =>
         TwoLetterWordState.findOneAndUpdate(
@@ -58,34 +52,20 @@ export const getNextTwoLetterWord = async (req, res) => {
       )
     );
 
-    // Fetch candidate states
     const candidateStates = await TwoLetterWordState.find({
       studentId,
       twoLetterWordId: { $in: finalWords.map(w => w.id) },
     });
 
-    if (candidateStates.length === 0) {
+    if (!candidateStates.length) {
       return res.status(500).json({
         success: false,
         error: "No two-letter word states available",
       });
     }
 
-    const RECENT_WINDOW_MS = 30 * 1000; // 30 seconds
+    const chosenState = selectNextState(candidateStates);
 
-    const now = Date.now();
-
-    const filteredStates = candidateStates.filter(state => {
-      if (!state.lastShownAt) return true;
-      return now - new Date(state.lastShownAt).getTime() > RECENT_WINDOW_MS;
-    });
-
-    // fallback if all filtered out
-    const selectionPool =
-      filteredStates.length > 0 ? filteredStates : candidateStates;
-
-    const chosenState = selectNextState(selectionPool);
-    // BEFORE activating chosenState
     await TwoLetterWordState.updateMany(
       {
         studentId,
@@ -95,20 +75,26 @@ export const getNextTwoLetterWord = async (req, res) => {
       { isActive: false }
     );
 
-    // Bandit selection
     chosenState.isActive = true;
     chosenState.lastShownAt = new Date();
     await chosenState.save();
 
-    // Find word in data
     const chosenWord = TWO_LETTER_WORDS.find(
-      w => w.id === chosenState.twoLetterWordId
-    );
+  w => String(w.id) === String(chosenState.twoLetterWordId)
+);
+
+if (!chosenWord) {
+  return res.status(500).json({
+    success: false,
+    error: "Selected word not found in TWO_LETTER_WORDS",
+  });
+}
 
     return res.json({
       word: chosenWord.text,
       twoLetterWordId: chosenState.twoLetterWordId,
     });
+
   } catch (err) {
     console.error("Error in getNextTwoLetterWord:", err);
     return res.status(500).json({
@@ -232,6 +218,16 @@ export const geminiTwoLetterAttempt = async (req, res) => {
       if (spokenChars[i] !== expectedChars[i])
         problemLetters.push(expectedChars[i]);
     }
+
+    await TwoLetterWordAttempt.create({
+  studentId,
+  twoLetterWordId,
+  expected: expected_lower,
+  transcript: spoken_lower,
+  wordCorrect,
+  responseTimeMs: responseTimeMs ? Number(responseTimeMs) : 0,
+  problemLetters: [...new Set(problemLetters)],
+});
 
     return res.json({
       wordCorrect,

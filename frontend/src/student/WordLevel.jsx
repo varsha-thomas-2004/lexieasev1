@@ -43,8 +43,74 @@ export default function WordLevel() {
   const [shownAt, setShownAt] = useState(null);
   const [feedback, setFeedback] = useState(null);
   const [isRecording, setIsRecording] = useState(false);
+<<<<<<< HEAD
   const [paintedLetters, setPaintedLetters] = useState({});
+=======
+  const [isProcessing, setIsProcessing] = useState(false);
+>>>>>>> varsha
 
+  const recognitionRef = useRef(null);
+  const spokenRef = useRef("");
+  const shouldSubmitRef = useRef(false);
+  
+  const wordIdRef = useRef(null);
+  const wordRef = useRef(null);
+  const shownAtRef = useRef(null);
+
+  // Add animation styles
+  useEffect(() => {
+    const styleSheet = document.createElement("style");
+    styleSheet.textContent = `
+      @keyframes wave {
+        0%, 100% { height: 10px; }
+        50% { height: 35px; }
+      }
+    `;
+    document.head.appendChild(styleSheet);
+    return () => document.head.removeChild(styleSheet);
+  }, []);
+
+  
+  useEffect(() => {
+    wordIdRef.current = wordId;
+    wordRef.current = word;
+    shownAtRef.current = shownAt;
+  }, [wordId, word, shownAt]);
+
+  /* =========================
+     Varied Feedback Messages
+  ========================== */
+  const getSuccessFeedback = () => {
+    const messages = [
+      "Perfect! You nailed it!",
+      "Excellent pronunciation! Well done!",
+      "Outstanding work! That was spot on!",
+      "Brilliant! You said it perfectly!",
+      "Fantastic! Keep it up!",
+      "Wonderful! You got it right!",
+      "Amazing job! Keep going!",
+      "Superb! You're doing great!",
+      "Incredible! That was perfect!",
+      "Great work! You've got this!",
+    ];
+    return messages[Math.floor(Math.random() * messages.length)];
+  };
+
+  const getEncouragementFeedback = () => {
+    const messages = [
+      "Good attempt! Keep practicing!",
+      "Nice try! You're getting better!",
+      "Keep going! You're improving!",
+      "Good effort! Try again!",
+      "You're close! Keep trying!",
+      "Almost there! Don't give up!",
+      "Great attempt! Practice makes perfect!",
+      "You're doing well! Keep at it!",
+      "Nice effort! You can do it!",
+      "Keep practicing! You're making progress!",
+    ];
+    return messages[Math.floor(Math.random() * messages.length)];
+  };
   const mediaRecorderRef = useRef(null);
   const chunksRef = useRef([]);
   const streamRef = useRef(null);
@@ -80,6 +146,19 @@ export default function WordLevel() {
      Load next word
   ========================== */
   const loadWord = async () => {
+    try {
+      const res = await apiFetch("/api/words/next");
+      console.log("✅ Word loaded:", res);
+      setWord(res.word);
+      setWordId(res.wordId);
+      setFeedback(null);
+      setSpoken("");
+      spokenRef.current = "";
+      setShownAt(Date.now());
+    } catch (error) {
+      console.error("❌ Failed to load word:", error);
+      setWord("Error loading word. Please refresh.");
+    }
     const res = await apiFetch("/api/words/next");
     console.log("Loaded word: ", res.word);
     setWord(res.word);
@@ -129,7 +208,230 @@ export default function WordLevel() {
   };
 
   /* =========================
-     Recording controls (MediaRecorder -> upload to Gemini)
+     Audio Feedback
+  ========================== */
+  const speakFeedback = (feedback) => {
+    if (!("speechSynthesis" in window)) return;
+
+    // Always pick a random message, not using the same one as visual
+    const text = feedback.wordCorrect
+      ? getSuccessFeedback()
+      : getEncouragementFeedback();
+
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    
+    utterance.rate = 1.0;
+    utterance.pitch = 1.1;
+    utterance.volume = 1.0;
+    
+    window.speechSynthesis.speak(utterance);
+  };
+
+  /* =========================
+     Submit Attempt
+  ========================== */
+  const submitAttempt = async () => {
+    console.log("📤 submitAttempt called");
+    console.log("📊 Current refs:", {
+      wordId: wordIdRef.current,
+      word: wordRef.current,
+      spoken: spokenRef.current,
+      shownAt: shownAtRef.current,
+    });
+    
+    if (!wordIdRef.current || !wordRef.current || !spokenRef.current || !shownAtRef.current) {
+      console.log("❌ Missing data, aborting submit");
+      alert("Missing data - check console");
+      return;
+    }
+
+    setIsProcessing(true); // Show processing indicator
+
+    try {
+      const responseTimeMs = Date.now() - shownAtRef.current;
+      
+      const payload = {
+        wordId: wordIdRef.current,
+        expected: wordRef.current,
+        spoken: spokenRef.current,
+        responseTimeMs,
+      };
+      
+      console.log("📤 Exact payload being sent:", JSON.stringify(payload, null, 2));
+
+      const response = await fetch("http://localhost:5001/api/words/attempt", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      console.log("📡 Response status:", response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("❌ Backend error response:", errorText);
+        throw new Error(`Server error: ${response.status} - ${errorText.substring(0, 200)}`);
+      }
+
+      const res = await response.json();
+
+      console.log("✅ API Response:", res);
+
+      // Add varied feedback message
+      const feedbackMessage = res.wordCorrect
+        ? getSuccessFeedback()
+        : getEncouragementFeedback();
+
+      setFeedback({
+        ...res,
+        displayMessage: feedbackMessage,
+      });
+      
+      setIsProcessing(false); // Hide processing indicator
+      
+      speakFeedback(res);
+
+      // Load next word after delay
+      setTimeout(() => {
+        console.log("⏭️ Loading next word...");
+        loadWord();
+      }, 1600);
+    } catch (error) {
+      console.error("❌ Failed to submit attempt:", error);
+      console.error("❌ Error details:", error.message);
+      setIsProcessing(false); // Hide processing indicator
+      setFeedback({
+        wordCorrect: false,
+        displayMessage: "Error: " + error.message,
+      });
+    }
+  };
+
+  /* =========================
+     Speech Recognition Setup
+  ========================== */
+  useEffect(() => {
+    console.log("🎙️ Setting up speech recognition (ONCE)");
+    
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert("Speech Recognition not supported in this browser");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = "en-US";
+    recognition.interimResults = true;
+    recognition.continuous = true; // Changed to true
+    recognition.maxAlternatives = 1;
+
+    recognition.onstart = () => {
+      console.log("🎙️ Recognition started");
+    };
+
+    recognition.onresult = (event) => {
+      console.log("🎤 onresult event triggered, results count:", event.results.length);
+      
+      for (let i = 0; i < event.results.length; i++) {
+        const result = event.results[i];
+        const transcript = result[0].transcript;
+        const confidence = result[0].confidence;
+        const isFinal = result.isFinal;
+        
+        console.log(`🎤 Result ${i}: "${transcript}" (confidence: ${confidence?.toFixed(2) || 'N/A'}, final: ${isFinal})`);
+        
+        // Save both final AND interim results (Web Speech API sometimes doesn't send final)
+        if (transcript && transcript.trim()) {
+          spokenRef.current = transcript.trim();
+          setSpoken(transcript.trim());
+          console.log(`${isFinal ? '✅' : '📝'} Saved ${isFinal ? 'final' : 'interim'} transcript:`, transcript);
+        }
+      }
+    };
+
+    recognition.onaudiostart = () => {
+      console.log("🔊 Audio capture started");
+    };
+
+    recognition.onaudioend = () => {
+      console.log("🔇 Audio capture ended");
+    };
+
+    recognition.onsoundstart = () => {
+      console.log("🔊 Sound detected!");
+    };
+
+    recognition.onsoundend = () => {
+      console.log("🔇 Sound ended");
+    };
+
+    recognition.onspeechstart = () => {
+      console.log("🗣️ Speech detected!");
+    };
+
+    recognition.onspeechend = () => {
+      console.log("🗣️ Speech ended");
+    };
+
+    recognition.onerror = (event) => {
+      console.error("❌ Recognition error:", event.error);
+      console.error("❌ Error message:", event.message);
+      setIsRecording(false);
+      shouldSubmitRef.current = false;
+      
+      if (event.error === 'no-speech') {
+        alert('No speech detected. Please try again and speak clearly.');
+      } else if (event.error === 'audio-capture') {
+        alert('Microphone not accessible. Please check permissions.');
+      }
+    };
+
+    recognition.onend = () => {
+      console.log(`🎙️ Recognition ended. hasTranscript: ${!!spokenRef.current}`);
+      setIsRecording(false);
+
+      // ✅ AUTO-SUBMIT if we have a transcript
+      if (spokenRef.current) {
+        console.log("✅ Calling submitAttempt");
+        submitAttempt();
+      } else {
+        console.log("⚠️ Not submitting - no transcript");
+      }
+
+      shouldSubmitRef.current = false;
+    };
+
+    recognitionRef.current = recognition;
+    console.log("✅ Speech recognition ready");
+
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+        console.log("🧹 Recognition cleaned up on unmount");
+      }
+    };
+  }, []); // Empty array - only setup once
+
+  /* =========================
+     Cleanup speech synthesis
+  ========================== */
+  useEffect(() => {
+    return () => {
+      if (window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+    };
+  }, []);
+
+
+  /* =======================  
+    Recording controls (MediaRecorder -> upload to Gemini)
   ========================== */
   const startRecording = async () => {
     try {
@@ -205,6 +507,8 @@ export default function WordLevel() {
         setFeedback(data);
         if (data?.transcript) setSpoken(data.transcript);
 
+        speakFeedback(data); // ✅ Added: speak feedback after audio attempt
+
         setTimeout(() => loadWord(), 1500);
       };
 
@@ -227,6 +531,7 @@ export default function WordLevel() {
      Render
   ========================== */
   if (!word) return <div style={styles.loading}>Loading…</div>;
+<<<<<<< HEAD
   const speakFeedback = (feedback) => {
     if (!("speechSynthesis" in window) || !feedback) return;
     speakText(
@@ -254,6 +559,11 @@ export default function WordLevel() {
           border: `1px solid ${readingStyle?.colors.border || "#e2e8f0"}`,
         }}
       >
+=======
+  return (
+    <div style={styles.container}>
+      <div style={styles.card}>
+>>>>>>> varsha
         {/* <video
           ref={videoRef}
           autoPlay
@@ -405,6 +715,7 @@ export default function WordLevel() {
         )}
         {syllables.length > 0 && (
           <button
+<<<<<<< HEAD
             style={{ ...styles.primaryButton, marginBottom: 24, marginRight: 12 }}
             onClick={() => speakWordBreakdown(word, syllables)}
           >
@@ -414,6 +725,9 @@ export default function WordLevel() {
         {syllables.length > 0 && (
           <button
             style={{ ...styles.secondaryAction, marginBottom: 24 }}
+=======
+            style={{ ...styles.primaryButton, marginBottom: 24 }}
+>>>>>>> varsha
             onClick={() => speakSyllables(syllables)}
           >
             Hear Syllables Only
@@ -450,20 +764,38 @@ export default function WordLevel() {
           </p>
         )}
 
+        {isProcessing && (
+          <div style={styles.processingContainer}>
+            <div style={styles.waveContainer}>
+              <div style={{...styles.wave, animationDelay: '0s'}}></div>
+              <div style={{...styles.wave, animationDelay: '0.1s'}}></div>
+              <div style={{...styles.wave, animationDelay: '0.2s'}}></div>
+              <div style={{...styles.wave, animationDelay: '0.3s'}}></div>
+              <div style={{...styles.wave, animationDelay: '0.4s'}}></div>
+            </div>
+            <p style={styles.processingText}>Processing your answer...</p>
+          </div>
+        )}
+
         {feedback && (
-          <div style={styles.feedbackBox}>
+          <div
+            style={{
+              ...styles.feedbackBox,
+              backgroundColor: feedback.wordCorrect ? "#d1fae5" : "#fff7ed",
+            }}
+          >
             <p
               style={{
                 ...styles.feedbackText,
                 color: feedback.wordCorrect ? "#059669" : "#d97706",
               }}
             >
-              {feedback.message}
+              {feedback.displayMessage || feedback.message}
             </p>
 
             {feedback.problemLetters?.length > 0 && (
               <p style={styles.problem}>
-                Focus on: <strong>{feedback.problemLetters.join(", ")}</strong>
+                💡 Focus on: <strong>{feedback.problemLetters.join(", ")}</strong>
               </p>
             )}
           </div>
@@ -474,7 +806,7 @@ export default function WordLevel() {
 }
 
 /* =========================
-   Styles (matches LetterLevel)
+   Styles (matches original LetterLevel)
 ========================== */
 const styles = {
   container: {
@@ -577,7 +909,6 @@ const styles = {
   feedbackBox: {
     marginTop: 20,
     padding: 16,
-    backgroundColor: "#f9fafb",
     borderRadius: 8,
   },
   feedbackText: {
@@ -593,5 +924,32 @@ const styles = {
     textAlign: "center",
     marginTop: 100,
     fontSize: 18,
+  },
+  processingContainer: {
+    marginTop: 20,
+    padding: 20,
+    backgroundColor: "#f0f9ff",
+    borderRadius: 8,
+    border: "2px solid #bae6fd",
+  },
+  waveContainer: {
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: 4,
+    height: 40,
+    marginBottom: 10,
+  },
+  wave: {
+    width: 4,
+    backgroundColor: "#3b82f6",
+    borderRadius: 4,
+    animation: "wave 1.2s ease-in-out infinite",
+  },
+  processingText: {
+    fontSize: 16,
+    color: "#1e40af",
+    fontWeight: 600,
+    margin: 0,
   },
 };

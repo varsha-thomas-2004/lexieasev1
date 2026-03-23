@@ -1,3 +1,5 @@
+
+
 import React, { useState, useRef, useEffect } from "react";
 import { apiFetch } from "../api/api";
 import { useOutletContext } from "react-router-dom";
@@ -143,7 +145,13 @@ export default function LetterLevelGemini() {
 
       const data = await res.json();
 
-      setScore(data.score);
+      // Don't show score if it's 100
+      if (data.score === 100) {
+        setScore(null);
+      } else {
+        setScore(data.score);
+      }
+      
       setStatus(data.message);
 
       speakFeedback(data.score);
