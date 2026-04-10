@@ -19,8 +19,10 @@ import {
   buildWordFeedbackSpeech,
   speakText,
   splitIntoSyllables,
+  splitIntoPhones,
   getGoogleStylePronunciation,
   speakSyllables,
+  speakPhones,
   speakWordBreakdown,
 } from "../utils/syllabify";
 
@@ -33,6 +35,7 @@ export default function WordLevel() {
   const brushState = outletContext?.brushState;
   const clearHighlightsVersion = outletContext?.clearHighlightsVersion;
   const [syllables, setSyllables] = useState([]);
+  const [phones, setPhones] = useState([]);
   const [pronunciation, setPronunciation] = useState("");
 
   const [word, setWord] = useState(null);
@@ -87,7 +90,9 @@ export default function WordLevel() {
     setSourceSentence(res.sourceSentence || "");
     setSourceDocTitle(res.sourceDocTitle || "");
     const s = await splitIntoSyllables(res.word || "");
+    const p = await splitIntoPhones(res.word || "");
     setSyllables(s);
+    setPhones(p);
     setPronunciation(getGoogleStylePronunciation(s));
 
     setWordId(res.wordId);
@@ -236,6 +241,9 @@ export default function WordLevel() {
      Render
   ========================== */
   if (!word) return <div style={styles.loading}>Loading…</div>;
+  const splitMode = readingStyle?.splitMode || "syllables";
+  const showSyllables = splitMode === "syllables" || splitMode === "both";
+  const showPhones = splitMode === "phones" || splitMode === "both";
   const speakFeedback = (feedback) => {
     if (!("speechSynthesis" in window) || !feedback) return;
     speakText(
@@ -382,7 +390,7 @@ export default function WordLevel() {
           </p>
         )}
 
-        {syllables.length > 0 && (
+        {showSyllables && syllables.length > 0 && (
           <p
             style={{
               ...styles.syllables,
@@ -395,6 +403,22 @@ export default function WordLevel() {
             }}
           >
             Syllables: {syllables.join(" - ")}
+          </p>
+        )}
+        {showPhones && phones.length > 0 && (
+          <p
+            style={{
+              ...styles.syllables,
+              color: readingStyle?.colors.muted || styles.syllables.color,
+              fontFamily: readingStyle?.fontFamily || styles.syllables.fontFamily,
+              fontSize: `${20 * (readingStyle?.fontScale || 1)}px`,
+              letterSpacing: readingStyle?.letterSpacing || "0.08em",
+              wordSpacing: readingStyle?.wordSpacing || "0.18em",
+              lineHeight: readingStyle?.lineHeight || 1.65,
+              marginTop: 0,
+            }}
+          >
+            Phones: {phones.join(" - ")}
           </p>
         )}
         {pronunciation && (
@@ -412,19 +436,28 @@ export default function WordLevel() {
             Pronunciation: {pronunciation}
           </p>
         )}
-        {syllables.length > 0 && (
+        {showSyllables && syllables.length > 0 && (
           <button
-            style={{ ...styles.primaryButton, marginBottom: 24, marginRight: 12 }}            onClick={() => speakWordBreakdown(word, syllables)}
+            style={{ ...styles.primaryButton, marginBottom: 24, marginRight: 12 }}
+            onClick={() => speakWordBreakdown(word, syllables)}
           >
             Hear Word Breakdown
           </button>
         )}
-        {syllables.length > 0 && (
+        {showSyllables && syllables.length > 0 && (
           <button
             style={styles.secondaryAction}
             onClick={() => speakSyllables(syllables)}
           >
             Hear Syllables Only
+          </button>
+        )}
+        {showPhones && phones.length > 0 && (
+          <button
+            style={styles.secondaryAction}
+            onClick={() => speakPhones(phones)}
+          >
+            Hear Phones Only
           </button>
         )}
 
