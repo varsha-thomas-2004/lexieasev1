@@ -2,6 +2,7 @@ import { apiFetch } from "../api/api";
 
 const VOWELS = "aeiouy";
 const LS_PREFIX = "syllables:";
+const PHONE_PREFIX = "phones:";
 
 const normalizeWord = (word = "") => word.toLowerCase().replace(/[^a-z]/g, "");
 
@@ -33,6 +34,63 @@ const heuristicSplit = (word = "") => {
   return out.filter(Boolean);
 };
 
+const phoneClusters = [
+  "tch",
+  "dge",
+  "igh",
+  "ph",
+  "sh",
+  "ch",
+  "th",
+  "wh",
+  "ck",
+  "ng",
+  "qu",
+  "oo",
+  "ee",
+  "ea",
+  "ai",
+  "ay",
+  "oa",
+  "ow",
+  "oi",
+  "oy",
+  "au",
+  "aw",
+  "er",
+  "ir",
+  "ur",
+  "ar",
+  "or",
+];
+
+const heuristicPhoneSplit = (word = "") => {
+  const clean = normalizeWord(word);
+  if (!clean) return [];
+
+  const phones = [];
+  let i = 0;
+
+  while (i < clean.length) {
+    const tri = clean.slice(i, i + 3);
+    const duo = clean.slice(i, i + 2);
+    if (phoneClusters.includes(tri)) {
+      phones.push(tri);
+      i += 3;
+      continue;
+    }
+    if (phoneClusters.includes(duo)) {
+      phones.push(duo);
+      i += 2;
+      continue;
+    }
+    phones.push(clean[i]);
+    i += 1;
+  }
+
+  return phones;
+};
+
 export const splitIntoSyllables = async (word = "") => {
   const clean = normalizeWord(word);
   if (!clean) return [];
@@ -60,6 +118,25 @@ export const splitIntoSyllables = async (word = "") => {
   const fallback = heuristicSplit(clean);
   localStorage.setItem(key, JSON.stringify(fallback));
   return fallback;
+};
+
+export const splitIntoPhones = async (word = "") => {
+  const clean = normalizeWord(word);
+  if (!clean) return [];
+
+  const key = `${PHONE_PREFIX}${clean}`;
+  const cached = localStorage.getItem(key);
+  if (cached) {
+    try {
+      return JSON.parse(cached);
+    } catch (_) {
+      // ignore invalid cache entries
+    }
+  }
+
+  const phones = heuristicPhoneSplit(clean);
+  localStorage.setItem(key, JSON.stringify(phones));
+  return phones;
 };
 
 export const getStressedSyllables = (syllables = []) =>
@@ -123,6 +200,17 @@ export const speakSyllables = (syllables = []) => {
       : `${syllables.length} syllables.`;
 
   speakSequence([intro, ...syllables], { rate: 0.72, pitch: 1.02 });
+};
+
+export const speakPhones = (phones = []) => {
+  if (!phones.length) return;
+
+  const intro =
+    phones.length === 1
+      ? "One phone."
+      : `${phones.length} phones.`;
+
+  speakSequence([intro, ...phones], { rate: 0.72, pitch: 1.02 });
 };
 
 export const speakWordBreakdown = (word = "", syllables = []) => {

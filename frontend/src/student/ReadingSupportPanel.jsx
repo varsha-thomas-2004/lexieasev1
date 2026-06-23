@@ -90,6 +90,19 @@ export default function ReadingSupportPanel({
             </label>
 
             <label style={styles.field}>
+              <span style={styles.label}>Word split</span>
+              <select
+                value={draftPreferences.splitMode || "syllables"}
+                onChange={(e) => setDraftPreference("splitMode", e.target.value)}
+                style={styles.select}
+              >
+                <option value="syllables">Syllables</option>
+                <option value="phones">Phones</option>
+                <option value="both">Both</option>
+              </select>
+            </label>
+
+            <label style={styles.field}>
               <span style={styles.label}>Magnifier</span>
               <button
                 type="button"

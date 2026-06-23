@@ -21,6 +21,7 @@ const defaultPreferences = {
   letterSpacing: 0.08,
   wordSpacing: 0.18,
   lineHeight: 1.65,
+  splitMode: "syllables",
 };
 
 export const fontPresets = {
@@ -160,5 +161,6 @@ export function getReadingStyle(preferences = defaultPreferences) {
     brushOpacity: Number(preferences.brushOpacity ?? 0.55),
     brushSize: Number(preferences.brushSize || 24),
     brushMode: preferences.brushMode || "paint",
+    splitMode: preferences.splitMode || "syllables",
   };
 }
